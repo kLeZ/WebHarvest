@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config charset="UTF-8">
+
+    <file action="write" path="xquerytest.xml">
+        <xquery>
+            <xq-param name="logicvalue" type="boolean">true</xq-param>
+            <xq-param name="numbervalue" type="double">12</xq-param>
+            <xq-param name="intseq" type="integer*">
+                3
+                7
+                14
+                18
+                27
+            </xq-param>
+            <xq-param name="stringvalue" type="string">ABCDEFGH123456</xq-param>
+            <xq-param name="doc"><![CDATA[
+               <table>
+                    <tr>
+                        <td>one</td>
+                        <td>two</td>
+                        <td>tree</td>
+                    </tr>
+                    <tr>
+                        <td>four</td>
+                        <td>five</td>
+                        <td>six</td>
+                    </tr>
+               </table>
+            ]]></xq-param>
+
+            <xq-expression><![CDATA[
+                (: example of external namespace and usage of Java function library inside the XQuery :)
+                declare namespace math ="java:java.lang.Math";
+
+                (: declare namespace for user-defined functions :)
+                declare namespace fn ="f:ns";
+
+                (: declaration of external variables with names and types matching to those in xq-param :)
+                declare variable $logicvalue as xs:boolean external;
+                declare variable $numbervalue as xs:double external;
+                declare variable $intseq as xs:integer* external;
+                declare variable $stringvalue as xs:string external;
+                declare variable $doc as node()* external;
+
+                (: user-defined function inside XQuery :)
+                declare function fn:myFunc($items as xs:integer*) as node()* {
+                    for $num in $items return
+                        <value>
+                            { math:sqrt($num) + 1 }
+                        </value>
+                };
+
+                (: resuting XML :)
+                <test>
+                    <logictest>
+                        { if ($logicvalue) then 1 else 2 },
+                        { $logicvalue eq ($numbervalue gt 15) }
+                    </logictest>
+                    <doubletest>
+                        { $numbervalue * 2 + 10 },
+                        { $numbervalue instance of xs:float },
+                        { round($numbervalue) }
+                    </doubletest>
+                    <stringtest>
+                        { concat($stringvalue, $logicvalue, $numbervalue) }
+                    </stringtest>
+                    <numberseqtest>
+                        { fn:myFunc($intseq) }
+                        { concat($intseq[1], "mama") }
+                    </numberseqtest>
+                    <doctest>
+                        { for $td in $doc//td return $td }
+                    </doctest>
+                </test>
+            ]]></xq-expression>
+        </xquery>
+    </file>
+
+</config>

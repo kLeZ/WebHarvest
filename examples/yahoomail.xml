@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config charset="ISO-8859-1">
+
+<!--
+	Expects following initial variables: 
+		username - required
+		password - required
+		onlyUnread (true or false))
+		numOfPages (integer)
+-->
+
+	<exit condition='${!sys.isVariableDefined("username")}' message="No username provided!" />
+	<exit condition='${!sys.isVariableDefined("password")}' message="No password provided!" />
+
+	<var-def name="onlyUnread" overwrite="false">false</var-def>
+	<var-def name="numOfPages" overwrite="false">1</var-def>
+
+	<include path="functions.xml"/>
+
+	<var-def name="redirectUrl">
+		<xpath expression="//a/@href">
+			<html-to-xml>
+				<http method="post" url="https://login.yahoo.com/config/login">
+					<loop item="field" index="i">
+						<list>
+							<xpath expression="//input[@name != 'login' and @name!='passwd']">
+								<html-to-xml>
+									<http url="http://login.yahoo.com/config/mail"/>
+								</html-to-xml>
+							</xpath>
+						</list>
+						<body>
+							<http-param name='${sys.xpath("//@name", field.toString())}'>
+								<template>${sys.xpath("//@value", field.toString())}</template>
+							</http-param>
+						</body>
+					</loop>
+					<http-param name="login"><var name="username"/></http-param>
+					<http-param name="passwd"><var name="password"/></http-param>
+				</http>
+			</html-to-xml>
+		</xpath>
+	</var-def>
+	
+	<var-def name="mainUrl">
+		<xpath expression='//a[contains(., "old version")]/@href'>
+			<var-def name="firstPage">
+				<html-to-xml>
+					<http url="http://us.f348.mail.yahoo.com/ym/login?nojs=1"/>
+				</html-to-xml>
+			</var-def>
+		</xpath>
+	</var-def>
+	
+	<case>
+		<if condition='${!"".equals(mainUrl.toString().trim())}'>
+			<var-def name="firstPage">
+				<http url="${mainUrl}"/>
+			</var-def>
+		</if>
+	</case>
+
+	<var-def name="inboxRelativeUrl">
+		<xpath expression='//a[contains(., "Check Mail")]/@href'>
+			<html-to-xml>
+				<var name="firstPage"/>
+			</html-to-xml>
+		</xpath>
+	</var-def>
+	
+	<var-def name="inboxUrl"  id="inboxUrl">
+		<template>${sys.fullUrl(redirectUrl, inboxRelativeUrl)}</template>
+	</var-def>
+	
+	<case>
+		<if condition="${onlyUnread}">
+			<var-def name="inboxRelativeUrl">
+				<xpath expression="(//a[data(.) = 'Unread'])[1]/@href">
+					<html-to-xml>
+						<http url="${inboxUrl}"/>
+					</html-to-xml>
+				</xpath>
+			</var-def>
+			<var-def name="inboxUrl">
+				<template>${sys.fullUrl(inboxUrl, inboxRelativeUrl)}</template>
+			</var-def>
+		</if>
+	</case>
+
+	<file action="write" path="yahoomails.xml">
+	    <xquery id="mails">
+	        <xq-param name="doc">
+	            <text>
+	                <![CDATA[ <mails> ]]>
+	                <call name="download-multipage-list">
+	                    <call-param name="pageUrl"><var name="inboxUrl"/></call-param>
+	                    <call-param name="nextXPath">(//a[. = 'Next']/@href)[position() = 1]</call-param>
+	                    <call-param name="itemXPath">//tr[td/input[@type='checkbox']]</call-param>
+	                    <call-param name="maxloops"><var name="numOfPages"/></call-param>
+	                </call>
+	                <![CDATA[ </mails> ]]>
+	            </text>
+	        </xq-param>
+	        <xq-expression><![CDATA[
+	            declare variable $doc as node()* external;
+	        	<mails> {
+		         	for $row in $doc/mails/tr return
+			            <mail unread="{if($row//b) then "true" else "false"}">
+	                        <sender>{normalize-space(data($row/td[3]))}</sender>
+	                        <date>{normalize-space(data($row/td[4]))}</date>
+	                        <size>{normalize-space(data($row/td[5]))}</size>
+	                        <subject>{normalize-space(data($row/td[6]))}</subject>
+	                        <link>{normalize-space(data($row/td[6]//a/@href))}</link>
+			            </mail>
+	            } </mails>
+	        ]]></xq-expression>
+	    </xquery>
+	</file>
+
+</config>

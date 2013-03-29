@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2007 sp1 (http://www.altova.com) by vlada (vlada) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://web-harvest.sourceforge.net/schema/1.0/config" targetNamespace="http://web-harvest.sourceforge.net/schema/1.0/config" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="config">
+		<xs:annotation>
+			<xs:documentation>Basic element - contains sequence of process descriptions</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="groupProcessors" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="charset">
+				<xs:annotation>
+					<xs:documentation>Default charset used wherever not explicitly specified in processors</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="scriptlang">
+				<xs:annotation>
+					<xs:documentation>Scripting language used for the configuration. Should be one of: BeanShell (default), Javascript and Groovy</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="id"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:group name="groupProcessors">
+		<xs:choice>
+			<xs:element name="empty">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="text">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="file">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="action"/>
+					<xs:attribute name="path" use="required"/>
+					<xs:attribute name="type"/>
+					<xs:attribute name="charset"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="var-def">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="name" use="required"/>
+					<xs:attribute name="overwrite"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="var">
+				<xs:complexType>
+					<xs:attribute name="name" use="required"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="http">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="url" use="required"/>
+					<xs:attribute name="method"/>
+					<xs:attribute name="follow-redirects"/>
+					<xs:attribute name="ignore-response-body"/>
+					<xs:attribute name="charset"/>
+					<xs:attribute name="username"/>
+					<xs:attribute name="password"/>
+					<xs:attribute name="cookie-policy"/>
+					<xs:attribute name="retry-attempts"/>
+					<xs:attribute name="retry-delay"/>
+					<xs:attribute name="retry-delay-factor"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="http-param">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="name" use="required"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="http-header">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="name" use="required"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="html-to-xml">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="outputtype"/>
+					<xs:attribute name="advancedxmlescape"/>
+					<xs:attribute name="usecdata"/>
+					<xs:attribute name="specialentities"/>
+					<xs:attribute name="unicodechars"/>
+					<xs:attribute name="nbsp-to-sp"/>
+					<xs:attribute name="omitunknowntags"/>
+					<xs:attribute name="treatunknowntagsascontent"/>
+					<xs:attribute name="omitdeprtags"/>
+					<xs:attribute name="treatdeprtagsascontent"/>
+					<xs:attribute name="omitxmldecl"/>
+					<xs:attribute name="omitcomments"/>
+					<xs:attribute name="omithtmlenvelope"/>
+					<xs:attribute name="allowmultiwordattributes"/>
+					<xs:attribute name="allowhtmlinsideattributes"/>
+					<xs:attribute name="namespacesaware"/>
+					<xs:attribute name="prunetags"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="regexp">
+				<xs:complexType mixed="false">
+					<xs:sequence minOccurs="0">
+						<xs:element name="regexp-pattern">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="regexp-source">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="regexp-result" minOccurs="0">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="replace"/>
+					<xs:attribute name="max"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="xpath">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="expression" use="required"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="xquery">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="xq-param" minOccurs="0" maxOccurs="unbounded">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="name" use="required"/>
+								<xs:attribute name="type"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="xq-expression">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="xslt">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="xml">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="stylesheet">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="template">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="language"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="script">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="language"/>
+					<xs:attribute name="return"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="case">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="if" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="condition" use="required"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="else" minOccurs="0">
+							<xs:complexType>
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="loop">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="list">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="body">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="item"/>
+					<xs:attribute name="index"/>
+					<xs:attribute name="maxloops"/>
+					<xs:attribute name="filter"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="while">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="condition" use="required"/>
+					<xs:attribute name="index"/>
+					<xs:attribute name="maxloops"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="function">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="name" use="required"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="return">
+				<xs:complexType mixed="true">
+					<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="call">
+				<xs:complexType mixed="true">
+					<xs:choice minOccurs="0">
+						<xs:element name="call-param" minOccurs="0" maxOccurs="unbounded">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="name" use="required"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+					<xs:attribute name="name" use="required"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="include">
+				<xs:complexType>
+					<xs:attribute name="path" use="required"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="try">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="body">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="catch">
+							<xs:complexType mixed="true">
+								<xs:group ref="groupProcessors" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:attribute name="id"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="exit">
+				<xs:complexType>
+					<xs:attribute name="condition"/>
+					<xs:attribute name="message"/>
+					<xs:attribute name="id"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:choice>
+	</xs:group>
+</xs:schema>

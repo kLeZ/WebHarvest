@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://web-harvest.sourceforge.net/schema/2.1/jndi"
+  xmlns:core="http://web-harvest.sourceforge.net/schema/2.1/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  targetNamespace="http://web-harvest.sourceforge.net/schema/2.1/jndi"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:import namespace="http://web-harvest.sourceforge.net/schema/2.1/core"
+    schemaLocation="wh-core-2.1-loose.xsd" />
+
+  <xs:element name="database" type="databaseType">
+    <xs:annotation>
+      <xs:documentation>
+        Executes query against database in the JNDI-enabled environment.
+        Database connection is obtained via JNDI, thus, it is possible to integrate
+        some external connection pools (c3p0, dbcp and so forth).
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+
+  <xs:complexType name="databaseType" mixed="true">
+    <xs:choice minOccurs="1" maxOccurs="unbounded">
+      <xs:element ref="core:db-param" />
+      <xs:group ref="core:bodyElements" />
+    </xs:choice>
+    <xs:attribute name="name" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          valid JNDI name of database connection
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+</xs:schema>

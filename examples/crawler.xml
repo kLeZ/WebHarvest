@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config charset="UTF-8">
+
+    <!-- set initial page -->
+    <def var="home" value="http://web-harvest.sourceforge.net/index.php"/>
+
+    <!-- define script functions and variables -->
+    <script><![CDATA[
+        /* set of unvisited URLs */
+        Set unvisited = new HashSet();
+        unvisited.add(home);
+
+        /* set of visited URLs */
+        Set visited = new HashSet();
+
+        Set newLinks = null;
+    ]]></script>
+
+    <!-- loop while there are any unvisited links -->
+    <while condition="${unvisited.size() != 0}">
+        <loop item="currUrl">
+            <list>
+                <get var="unvisited"/>
+            </list>
+            <body>
+                <empty>
+                    <def var="content">
+                        <html-to-xml>
+                            <http url="${currUrl}"/>
+                        </html-to-xml>
+                    </def>
+
+                    <script>currentFullUrl = sys.fullUrl(home, currUrl)</script>
+
+                    <!--  saves downloaded page -->
+                    <file action="write" path='spider/${currentFullUrl.replaceAll("http://|https://|file://", "")}.html'>
+                        <get var="content"/>
+                    </file>
+
+                    <!-- adds current URL to the list of visited -->
+                    <script><![CDATA[
+                        visited.add(sys.fullUrl(home, currUrl));
+                        newLinks = new HashSet();
+                        print(currUrl);
+                    ]]></script>
+
+                    <!-- loop through all collected links on the downloaded page -->
+                    <loop item="currLink">
+                        <list>
+                            <xpath expression="//a/@href">
+                                <get var="content"/>
+                            </xpath>
+                        </list>
+                        <body>
+                            <script><![CDATA[
+                                /* checks if specified URL is valid for download */
+                                boolean isValidUrl(String url) {
+                                    String urlSmall = url.toLowerCase();
+                                    return urlSmall.startsWith("http://web-harvest.sourceforge.net/") && urlSmall.endsWith(".php");
+                                }
+                                String fullLink = sys.fullUrl(home, currLink);
+                                if ( isValidUrl(fullLink.toString()) && !visited.contains(fullLink) && !unvisited.contains(fullLink) ) {
+                                    newLinks.add(fullLink);
+                                }
+                            ]]></script>
+                        </body>
+                    </loop>
+                </empty>
+            </body>
+        </loop>
+
+        <!-- unvisited link are now all the collected new links from downloaded pages  -->
+        <script>unvisited = newLinks</script>
+    </while>
+
+</config>

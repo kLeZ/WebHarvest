@@ -1,0 +1,1230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://web-harvest.sourceforge.net/schema/2.0/core"
+           targetNamespace="http://web-harvest.sourceforge.net/schema/2.0/core"
+           elementFormDefault="unqualified"
+           attributeFormDefault="unqualified">
+
+    <xs:element name="config">
+        <xs:annotation>
+            <xs:documentation>
+                This is the root element of every configuration file.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="bodyType">
+                    <xs:attribute name="charset" use="optional" default="UTF-8">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Defines default charset used throughout configuration. Every processor that needs
+                                charset information uses this value if other not explicitly set.
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="scriptlang" use="optional" default="beanshell">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Defines default scripting engine used throughout configuration. Allowed values are
+                                beanshell, javascript and groovy. Default engine is used wherever not other is
+                                specified. script and template processors have ability to specify scripting engine
+                                within the same Web-Harvest configuration, that way giving possibility to even mix
+                                different scripting languages.
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="bodyType">
+        <xs:choice minOccurs="1" maxOccurs="unbounded">
+            <xs:element name="empty" type="bodyType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Wraps execution sequence and returns empty value. This element is used in situations when
+                        execution result is needless.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="text" type="textElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Converts embedded value to the string representation.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="def" type="defElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Defines a new local scoped variable.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="set" type="defElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Set a variable value.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="get" type="getElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Returns value of the variable. Throws an exception if variable is not defined.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="value-of" type="valueOfElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Evaluates an expression. Similar to &lt;template&gt;, but less verbose and more convenient for short expressions.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="file" type="fileElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Reads and writes content of the file or search directory for specified files.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="http" type="httpElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Sends HTTP request to the specified URL and gets HTTP response as a result. First the body of
+                        the processor is executed in order to define optional HTTP parameters and/or headers and then
+                        sends HTTP request.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="http-param" type="http-paramElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Adds HTTP parameter for the first enclosing HTTP processor for both post and get requests. If
+                        used outside the HTTP processor an exception is thrown.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="http-header" type="http-headerElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Defines HTTP header for the first enclosing HTTP processor. If used outside the HTTP processor
+                        an exception is thrown.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="html-to-xml" type="html-to-xmlElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Cleans up the content of the body and transforms it to the valid XML. The body is usually HTML
+                        obtained as a result of http processor execution. Actual parsing and cleaning job is delegated
+                        to HtmlCleaner tool. Altough no special tuning is needed in most cases, cleaner may be
+                        configured with the several parameters defined with the processor's attributes.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="regexp" type="regexpElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Searches the body for the given regular expression and optionally replaces found occurrences
+                        with specified pattern. If body is a list of values then the regexp processor is applied to
+                        every item and final execution result is the list.
+
+                        For each group inside the search pattern and for each found occurrence variables with names _
+                        &lt;group_number&gt; are created. See some Regular Expression tutorial for better explanation of
+                        groups.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="xpath" type="xpathElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Uses an XPath language expression to search an XML document.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="xquery" type="xqueryElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Uses an XQuery language expression to query an XML document.
+
+                        It is allowed to optionally specify multiple external parameters for the query. In most cases at
+                        least one, containing XML document is needed. For every specified xquery parameter the
+                        declaration inside the xq-expression in the form:
+
+                        declare variable $&lt;xquery_param_name&gt; as &lt;xquery_param_type&gt; external;
+
+                        is required in order to match the name and type of proceeded parameter. Valid parameter types
+                        supported by Web-Harvest are: node(), integer, long, float, double, boolean, string and analog
+                        sequence types: node()*, integer*, long*, float*, double*, boolean*, string*.
+                        If not specified, default XQuery parameter is node().
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="xslt" type="xsltElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Applies XSLT transformation to the XML document.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="script" type="scriptElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Executes code written in specified scripting language. Web-Harvest supports BeanShell, Groovy
+                        and Javascript. All of them are powerfull, wide-spread and popular scripting languages.
+
+                        Body of script processors is executed in specified language and optionally evaluated expression
+                        specified in return attribute is returned. All variables defined during configuration execution
+                        are also available in the script processor. However, it must be noted that variables used
+                        throughtout Web-Harvest are not simple types - they all are
+                        org.webharvest.runtime.variables.Variable objects (internal Web-Harvest class) that expose
+                        convinient methods:
+
+                        * String toString()
+                        * byte[] toBinary()
+                        * boolean toBoolean()
+                        * int toInt()
+                        * long toLong()
+                        * double toDouble()
+                        * double toDouble()
+                        * Object[] toArray()
+                        * java.util.List toList()
+                        * Object getWrappedObject()
+
+                        The way to push value back to the Web-Harvest after script finishes is command
+                        sys.defineVariable(varName, varValue, [overwrite]) which creates appropriate wrapper around
+                        specified value : list variables for java.util.List and arrays and simple variables for other
+                        objects. The best way to illustrate this is simple example bellow.
+
+                        Each script engine used in the single Web-Harvest configuration, once created, preserves its
+                        variable context throughout the configuration, meaning that all variables and objects are
+                        available in further script processors that use the same language.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="template" type="templateElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        For the given text content, parts surrounded with ${ and } are evaluated using the specified
+                        scripting engine. If no scripting language is specified, default one is used (see config
+                        element).
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="case" type="caseElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Executes conditional statement. Sequentially checks if some of the specified conditions in inner
+                        if elements is satisfied and if found one returns its body as the result. If no true statement
+                        is found result of execution is body of else statement if specified, or empty value otherwise.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="loop" type="loopElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Iterate through the specified list and executes specified body logic for each item. Result is
+                        the list of processed bodies.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="while" type="whileElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Loops while specified condition is satisfied. The result is list made of processed bodies in
+                        each iteration.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="function" type="functionElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Declares the user-defined function.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="return" type="bodyType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Returns value from the user-defined function.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="call" type="callElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Calls the user-defined function.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="include" type="includeElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Includes other configuration file and executes its logic. This is useful for keeping libraries
+                        of common functions or for splitting large extraction process into multiple files.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="try" type="tryElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Wraps execution and for any recoverable exception returns default value without crashing the
+                        whole process.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="exit" type="exitElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Conditionally breaks the configuration execution.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <!-- todo: create XSD for it
+            <xs:element name="database" type="databaseElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Execute query against database.
+
+                        JDBC driver library file(s) should be provided on the classpath if used programatically, or on
+                        the same path with Web-Harvest executable if used standalone. In case of SELECT sql statement,
+                        it returns list of row objects. They can be accessed with special accessor methods:
+                        &lt;mydbrow&gt;.getColumnCount() - returns number of columns returned.
+                        &lt;mydbrow&gt;.getColumnName(index) - returns name for column number.
+                        &lt;mydbrow&gt;.get(column_index) - returns field value for column number.
+                        &lt;mydbrow&gt;.get(column_name) - returns field value for column name.
+
+                        The whole list of returned db rows can be accessed by index to get individual row:
+                        &lt;mydbvar&gt;.get(rowindex)
+
+                        For example:
+                        mydb.get(0).get("image")
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            -->
+            <!-- todo: create XSD for it
+            <xs:element name="db-param" type="db-paramElementType">
+                <xs:annotation>
+                    <xs:documentation>
+
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            -->
+            <!-- todo: create XSD for it
+            <xs:element name="mail" type="mailElementType">
+                <xs:annotation>
+                    <xs:documentation>
+
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            -->
+            <!-- todo: create XSD for it
+            <xs:element name="mail-attach" type="mail-attachElementType">
+                <xs:annotation>
+                    <xs:documentation>
+
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            -->
+            <xs:element name="zip" type="zipElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Creates a ZIP archive by compressing inner content defined by zip-entry elements.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <!-- todo: create XSD for it
+            <xs:element name="ftp" type="ftpElementType">
+                <xs:annotation>
+                    <xs:documentation>
+
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            -->
+            <xs:element name="tokenize" type="tokenizeElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Splits given text to elements (tokens).
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <!-- todo: create XSD for it
+            <xs:element name="json-to-xml" type="json-to-xmlElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Converts given JSON content to XML.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            -->
+            <!-- todo: create XSD for it
+            <xs:element name="xml-to-json" type="xml-to-jsonElementType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Converts given XML content to JSON.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            -->
+            <xs:any processContents="lax" namespace="##other"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="textElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="charset" use="optional" default="default configuration's charset" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Charset used if body is converted from binary to text value.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="delimiter" use="optional" default="new line character" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Delimiter string used to separate items when concatenating them into single string.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="defElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="var" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            The name of variable. Should be valid like in most programming languages.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="value" use="optional" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Variable value expression.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="default" use="optional" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Default variable value.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="getElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="var" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Variable name.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="valueOfElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="expr" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Expression to evaluate.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="fileElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="action" use="optional" default="read" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Defines file action. Valid values are read, append, write and list.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="path" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            File path, relative to the working directory.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="type" use="optional" default="text" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Type of file: text or binary.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="charset" use="optional" default="[Default charset for config]" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Charset for text files. Has no effect if type is binary.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="listdirs" use="optional" default="yes" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to list directories (action = list).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="listfiles" use="optional" default="yes" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to list files (action = list).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="listrecursive" use="optional" default="no" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to recursively search directories (action = list).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="listfilter" use="optional" default="" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Filename pattern to search for (* is replacement for any sequence, ? for any character).
+                            Works only for action = list.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="httpElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="url" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            HTTP request URL.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="method" use="optional" default="get" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            HTTP method: get or post
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="charset" use="optional" default="[Default charset for config]" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Defines encoding of the HTTP response content. Has no effect if content type is binary.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="cookie-policy" use="optional" default="[Default cookie policy of the HTTP client]"
+                              type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Specifies the way how HTTP client manages cookies. Allowed values are:
+                            browser, ignore, netscape, rfc_2109 and default.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="username" use="optional" default="" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Specifies username if URL requires authentication.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="password" use="optional" default="" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Specifies password if URL requires authentication.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="content-type" use="optional" default="application/x-www-form-urlencoded" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            HTTP request Content Type
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="follow-redirects" use="optional" default="[Varies depending on the method]" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Sets whether or not the HTTP method should automatically follow HTTP redirects (status code 302, etc.)
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="ignore-response-body" use="optional" default="no" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Specifies if the response body should be skipped. Skipping response corpus saves traffic and time for downloading.
+                            It is sometimes useful with POST requests when you send some data to the server to change the server state and you are
+                            not interested in the data (possibly large binary data, e.g. image or document) which is sent to you in a response.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="retry-attempts" use="optional" default="5" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            How many retries should Web-Harvest attempt to get a meaningful response from the server.
+                            "Meaningful" means any valid response excepts:
+                            <em>502 (Bad Gateway)</em>,
+                            <em>503 (Service Unavailable)</em>,
+                            <em>504 (Gateway Timeout)</em>
+                            and
+                            <em>509 (Bandwidth Limit Exceeded)</em>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="retry-delay" use="optional" default="10000" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Delay in milliseconds before retrying.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="retry-delay-factor" use="optional" default="2" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Multiplier for
+                            <em>retry-delay</em>
+                            value which is subsequently applied to it for each subsequent execution attempt.
+                            For example, if
+                            <em>retry-delay</em>
+                            equals 10 sec and
+                            <em>retry-delay-factor</em>
+                            equals 2, Web-Harvest will wait for 10 seconds before 1st retry,
+                            20 seconds before 2nd, 40 before 3rd, 80 before 4th and so on.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="http-paramElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="name" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            The name of HTTP parameter.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="isfile" use="optional" default="no" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells if parameter is file for upload (applies only to multipart requests).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="contenttype" use="optional" default="" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            MIME type of the upload file (effective for multipart forms where parameter is file).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="filename" use="optional" default="" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Name of uploaded file (effective for multipart forms where parameter is file).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="http-headerElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="name" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            The name of HTTP header.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="html-to-xmlElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="outputtype" use="optional" default="simple" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Defines how the resulting XML will be serialized. Allowed values are simple, compact,
+                            browser-compact and pretty.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="advancedxmlescape" use="optional" default="true" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            If this parameter is set to true, ampersand sign (&amp;) that proceeds valid XML character
+                            sequences (&amp;XXX;) will not be escaped with &amp;XXX;
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="usecdata" use="optional" default="true" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            If true, HtmlCleaner will treat SCRIPT and STYLE tag contents as CDATA sections, or
+                            otherwise it will be regarded as ordinary text (special characters will be escaped).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="specialentities" use="optional" default="true" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            If true, special HTML entities (i.e. &amp;ocirc;, &amp;permil;, &amp;times;) are replaced
+                            with unicode characters they represent (ô, ‰, ×).
+                            This doesn't include &amp;,&lt;, &gt;, ", '.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="unicodechars" use="optional" default="true" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            If true, HTML characters represented by their codes in form &amp;#XXXX; are replaced with
+                            real unicode characters (i.e. &amp;#1078; is replaces with ж).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="nbsp-to-sp" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            If true, all occurrences of the
+                            <em>Non-breaking space</em>
+                            character (&amp;nbsp;, &amp;x#A0;)
+                            will be replaced by a normal space character (&amp;x#20;).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="omitunknowntags" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to skip (ignore) unknown tags during cleanup.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="treatunknowntagsascontent" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to treat unknown tags as ordinary content, i.e.
+                            &lt;something...&gt;
+                            will be transformed to &amp;lt;something...&amp;gt;. This attribute is applicable only if
+                            omitUnknownTags is set to false.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="omitdeprtags" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to skip (ignore) deprecated HTML tags during cleanup.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="treatdeprtagsascontent" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to treat deprecated tags as ordinary content, i.e. &lt;font...&gt; will be
+                            transformed to &amp;lt;font...&amp;gt;. This attribute is applicable only if
+                            omitDeprecatedTags is set to false.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="omitcomments" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to skip HTML comments.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="omithtmlenvelope" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to remove HTML and BODY tags from the resulting XML, and use first tag in the
+                            BODY section instead. If BODY section doesn't contain any tags, then this attribute has no
+                            effect.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="allowmultiwordattributes" use="optional" default="true" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells parser wether to allow attribute values consisting of multiple words or not. If true,
+                            attribute att="a b c" will stay like it is, and if false parser will split this into att="a"
+                            b="b" c="c" (this is default browsers' behaviour).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="allowhtmlinsideattributes" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells parser wether to allow html tags inside attribute values. For example, when this flag
+                            is set att="here is&lt;a href='xxxx'&gt;link&lt;/a&gt;" will stay like it is, and if not,
+                            parser will end attribute value after "here is ".
+                            This flag makes sense only if allowMultiWordAttributes is set as well.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="namespacesaware" use="optional" default="true" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            If true, namespace prefixes found during parsing will be preserved and all neccessery xml
+                            namespace declarations will be added in the root element. If false, all namespace prefixes
+                            and all xmlns namespace declarations will be stripped.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="prunetags" use="optional" default="empty string" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Comma-separated list of tags that will be complitely removed (with all nested elements) from
+                            XML tree after parsing. For exampe if pruneTags is "script,style", resulting XML will not
+                            contain scripts and styles.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="omitxmldecl" use="optional" default="false" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to skip XML declaration. The value must be true or false.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="regexpElementType">
+        <xs:sequence>
+            <xs:element name="regexp-pattern" type="bodyType"/>
+            <xs:element name="regexp-source" type="bodyType"/>
+            <xs:element name="regexp-result" type="bodyType" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="replace" use="optional" default="false" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Logical value telling if found occurrences of regular expression will be replaced. Valid values are:
+                    true/false or yes/no. If this value is true (yes), then the regexp-result needs to be specified with
+                    replacement value.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="max" use="optional" default="" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Limits the number of found pattern occurrences. There is no limit if it is not specified.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="flag-canoneq" use="optional" default="no" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Enables canonical equivalence.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="flag-caseinsensitive" use="optional" default="no" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Enables case-insensitive matching.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="flag-dotall" use="optional" default="yes" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Enables dotall mode.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="flag-multiline" use="optional" default="no" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Enables multiline mode.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="flag-unicodecase" use="optional" default="yes" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Enables Unicode-aware case folding.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="xpathElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="expression" use="optional" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            XPath language expression.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:anyAttribute namespace="http://web-harvest.sourceforge.net/schema/2.1/var"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="xqueryElementType">
+        <xs:sequence>
+            <xs:element name="xq-param" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="bodyType">
+                            <xs:attribute name="name" use="required" type="xs:string">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Name of XQuery parameter
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:attribute>
+                            <xs:attribute name="type" use="optional" default="node()" type="xs:string">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Type of XQuery parameter - one of the values: node(), integer, long, float,
+                                        double,
+                                        boolean, string, node()*, integer*, long*, float*, double*, boolean*, string*.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:attribute>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="xq-expression" type="bodyType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="xsltElementType">
+        <xs:sequence>
+            <xs:element name="xml" type="bodyType"/>
+            <xs:element name="stylesheet" type="bodyType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="scriptElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="language" use="optional"
+                              default="Default scripting language if defined in config element, or beanshell if nothing is defined."
+                              type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Defines which scripting engine is used in the processor. Valid values are beanshell,
+                            javascript and groovy.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="return" use="optional" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Specifies what this processor should evaluate at the end and return as processing value.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="templateElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="language" use="optional"
+                              default="Default config language"
+                              type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Defines which scripting engine is used in the processor. Valid values are beanshell,
+                            javascript and groovy.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="caseElementType">
+        <xs:sequence>
+            <xs:element name="if" minOccurs="1" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="bodyType">
+                            <xs:attribute name="condition" use="required" type="xs:string">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        If true (yes), body of if is evaluated.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:attribute>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+
+            </xs:element>
+            <xs:element name="else" type="bodyType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="loopElementType">
+        <xs:sequence>
+            <xs:element name="list" type="bodyType"/>
+            <xs:element name="body" type="bodyType"/>
+        </xs:sequence>
+        <xs:attribute name="item" use="optional" default="" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Name of the variable that takes the value of current list item.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="index" use="optional" default="" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Name of the index variable, initial value for the first loop is 1.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maxloops" use="optional" default="" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Limits number of iterations. There is no limit if it is not specified.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="filter" use="optional" default="" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Expression for filtering iteration list. It consists of arbitrary number of restrictions separated
+                    by comma. There are the following types of restrictions:
+
+                    * [n]-[m], for specifying index range, for example: 3-6, -5.
+                    * [n][:][m], for specifying sublist starting at index n and including items at indexes n+m, n+2*m,
+                    n+3*m, ..., for example 1:2 for all odd, 2:2 for all even.
+                    * unique, that removes duplicates from list comparing string values of list items.
+
+                    Valid filter which is combination of allowed restrictions is for example: 1-20,1:2,unique.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="empty" use="optional" default="no" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Equal to surrounding body by empty element, producing empty result of iteration.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="whileElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="condition" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Expression that is evaluated for every loop and if its value is true, the body is executed.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="index" use="optional" default="" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Name of the index variable, initial value for the first loop is 1.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="maxloops" use="optional" default="" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Limits number of iterations. There is no limit if it is not specified.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="empty" use="optional" default="no" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Equal to surrounding body by empty element, producing empty result of iteration.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="functionElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="name" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            The name of user-defined function
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="callElementType">
+        <xs:sequence>
+            <xs:element name="call-param" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="bodyType">
+                            <xs:attribute name="name" use="required" type="xs:string">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        The name of user-defined param
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:attribute>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" use="required" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of user-defined function
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="includeElementType">
+        <xs:attribute name="path" use="required" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Path of he configuration file to be included. Path is relative the directory where including
+                    configuration file is.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="tryElementType">
+        <xs:sequence>
+            <xs:element name="body" type="bodyType"/>
+            <xs:element name="catch" type="bodyType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="exitElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="condition" use="optional" default="true" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Condition that determines if execution will stop.
+                            Must be boolean value (true, yes, false, no).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="message" use="optional" default="" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Optional message to the user if configuration is exiting. Will be part of logging
+                            information, or dialog warning will popup if Web-Harvest is used in GUI mode.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="zipElementType">
+        <xs:sequence>
+            <xs:element name="zip-entry" minOccurs="1" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="bodyType">
+                            <xs:attribute name="name" use="required" type="xs:string">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Name of the file inside ZIP archive.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:attribute>
+                            <xs:attribute name="charset" use="optional"
+                                          default="default configuration's charset"
+                                          type="xs:string">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Charset of text file inside zip archive.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:attribute>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tokenizeElementType">
+        <xs:complexContent>
+            <xs:extension base="bodyType">
+                <xs:attribute name="delimiters" use="optional" default="new line character" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells which characters are used as token delimiters.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="trimtokens" use="optional" default="yes" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to trim resulting tokens.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="allowemptytokens" use="optional" default="no" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Tells whether to include empty tokens in the resulting list (consisting only of
+                            whitespaces).
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+</xs:schema>

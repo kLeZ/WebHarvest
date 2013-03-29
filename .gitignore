@@ -1,6 +1,64 @@
+#kate/kwrite/vi backups filter
+*~
+*swp
+.*swp
+*bak
+.*bak
+*.tmp
+
+## Generic folders
+dist/
+dist/**
+dist/**/*
+tmp/**
+tmp/**/*
+test-output/
+test-output/**
+test-output/**/*
+
+
+#java binaries
 *.class
 
 # Package Files #
-*.jar
 *.war
 *.ear
+
+## Eclipse specific
+*.pydevproject
+.project
+.metadata
+bin/
+bin/**
+bin/**/*
+ucdetector_reports/
+ucdetector_reports/**
+ucdetector_reports/**/*
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+
+
+## Maven build folders
+target/
+target/**
+target/**/*
+build/
+build/**
+build/**/*
+
+
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# CDT-specific
+.cproject
+
+# PDT-specific
+.buildpath

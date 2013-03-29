@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Expects following initial variable: 
+		search - search expression
+-->
+
+<config charset="UTF-8">
+
+    <include path="functions.xml"/>
+
+    <!-- defines search keyword and start URL -->
+    <var-def name="search" overwrite="false">platon</var-def>
+    
+    <var-def name="url">
+        <xpath expression="//noscript//a/@href[1]">
+            <html-to-xml>
+                <http url="http://images.google.com/images?q=${search}&amp;hl=en&amp;btnG=Search+Images"/>
+            </html-to-xml>
+        </xpath>
+    </var-def>
+
+    <!-- collects all image URLs -->
+    <var-def name="imgLinks">
+        <call name="download-multipage-list">
+            <call-param name="pageUrl"><var name="url"/></call-param>
+            <call-param name="nextXPath">//td[.='Next']/a/@href</call-param>
+            <call-param name="itemXPath">//img[contains(@src, 'images?q=tbn')]/@src</call-param>
+            <call-param name="maxloops">5</call-param>
+        </call>
+    </var-def>
+
+    <!-- download images and saves them to the files -->
+    <loop item="link" index="i" filter="unique">
+        <list>
+            <var name="imgLinks"/>
+        </list>
+        <body>
+            <file action="write" type="binary" path="google_images/${search}_${i}.gif">
+                <http url="${sys.fullUrl(url, link)}"/>
+            </file>
+        </body>
+    </loop>
+
+</config>

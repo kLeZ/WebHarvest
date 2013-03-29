@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Expects following initial variables: 
+		tags - tags for saerch on flickr - separated with blanks
+		num - number of pages with results
+-->
+
+<config>
+	<include path="functions.xml"/>
+	
+	<var-def name="tags" overwrite="false">art</var-def>
+	<var-def name="num" overwrite="false">1</var-def>
+	
+    <loop index="i" item="url">
+    	<list>
+		    <var-def name="imagelinks">    
+		        <call name="download-multipage-list">
+		            <call-param name="pageUrl"><template>http://www.flickr.com/search/?q=${tags}&amp;m=tags</template></call-param>
+		            <call-param name="nextXPath">//a[contains(., 'Next')]/@hrefs</call-param>
+		            <call-param name="itemXPath">//td[@class='DetailPic']//img/@src</call-param>
+		            <call-param name="maxloops"><template>${num}</template></call-param>
+		        </call>
+		    </var-def>
+		</list>
+		<body>
+			<empty>
+				<file action="write" path='flickr/${tags.toString().replaceAll(" ", "")}/${i}.jpg' type="binary">
+					<http url='${url.toString().replaceFirst("_m.jpg", ".jpg?v=0")}'/>
+				</file>
+			</empty>
+		</body>
+    </loop>
+    
+</config>

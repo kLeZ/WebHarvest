@@ -1,0 +1,12 @@
+- Retire explicit Variable wrapper. The expression ${x.toInt() < y.toInt()} should become ${x < y}
+- Passing variables by reference or by value? (consider the case of passing mutable collections)
+- What about transactions support for <database>?
+- Function definition scope. What about overriding?
+      f() {
+        k() {}
+        k() // this is OK
+      }
+      k() // Currently WH allows it, but this is weird.
+          // The function k is neither in lexical nor in dynamic scope at this point, so it should NOT be accessible in any ways.
+
+- <empty> should be more smart and not to allow the direct descendants to collect the returning data as it is gonna be ignored anyway.

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config charset="UTF-8">
+
+    <file action="write" path="expekt/odds.xml">
+        <template><![CDATA[ <odds time="${sys.datetime("dd.MM.yyyy, HH:mm:ss")}"> ]]></template>
+        
+        <loop item="row">
+            <!-- list consists of all rows in the main HTML table on the page -->
+            <list>
+                <xpath expression="//tr[@class='t' or @class='oddsRow1' or @class='oddsRow2']">
+                    <html-to-xml>
+                        <http url="http://www.expekt.com/odds/eventsodds.jsp?range=1000000&amp;sortby=2&amp;active=betting&amp;betcategoryId=SOC%25"/>
+                    </html-to-xml>
+                </xpath>
+            </list>
+            
+            <!-- 
+                It is needed to resolve odds, date and header rows. Distinction is 
+                made based on "class" attribute.
+            -->
+            <body>
+                <empty>
+                    <var-def name="clazz">
+                        <xpath expression="/tr/@class">
+                            <var name="row"/>
+                        </xpath>
+                    </var-def>
+                    <case>
+                        <if condition='${ "t".equals(clazz.toString()) }'>
+                            <var-def name="currDate"><var name="row"/></var-def>
+                        </if>
+                    </case>
+                </empty>
+                <case>
+                    <if condition='${ "oddsRow1".equals(clazz.toString()) || "oddsRow2".equals(clazz.toString()) }'>
+                        <xquery>
+                            <xq-param name="doc"><var name="row"/></xq-param>
+                            <xq-param name="currDate"><var name="currDate"/></xq-param>
+                            <xq-expression><![CDATA[
+                                declare variable $doc as node() external;
+                                declare variable $currDate as node() external;
+
+                                for $row in $doc//tr return
+                                    <odd date="{normalize-space(data($currDate))}" time="{normalize-space(data($row/td[1]))}" event="{normalize-space(data($row/td[2]))}" comp="{normalize-space(data($row/td[3]))}">
+                                        <odd_1>{normalize-space(data($row/td[4]))}</odd_1>
+                                        <odd_x>{normalize-space(data($row/td[5]))}</odd_x>
+                                        <odd_2>{normalize-space(data($row/td[6]))}</odd_2>
+                                    </odd>
+                            ]]></xq-expression>
+                        </xquery>
+                    </if>
+                </case>
+            </body>
+        </loop>
+        
+        <![CDATA[ </odds> ]]>
+    </file>
+    
+</config>

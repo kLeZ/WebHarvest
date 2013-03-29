@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config charset="ISO-8859-1">
+
+    <!-- sends post request with needed login information -->
+    <http method="post" url="http://www.nytimes.com/auth/login">
+        <http-param name="is_continue">true</http-param>
+        <http-param name="URI">http://</http-param>
+        <http-param name="OQ"></http-param>
+        <http-param name="OP"></http-param>
+        <http-param name="USERID">web-harvest</http-param>
+        <http-param name="PASSWORD">web-harvest</http-param>
+    </http>
+    
+    <var-def name="startUrl">http://www.nytimes.com/pages/todayspaper/index.html</var-def>
+    
+    <file action="write" path="nytimes/nytimes${sys.date()}.xml" charset="UTF-8">
+        <template>
+            <![CDATA[ <newyourk_times date="${sys.datetime("dd.MM.yyyy")}"> ]]>
+        </template>
+        
+        <loop item="articleUrl" index="i">
+            <!-- collects URLs of all articles from the front page -->
+            <list>
+                <xpath expression="//div[@class='story clearfix']/h5/a[1]/@href">
+                    <html-to-xml>
+                        <http url="${startUrl}"/>
+                    </html-to-xml>
+                </xpath>
+                <xpath expression="//div[@class='story' or @class='story headline']/a[1]/@href">
+                    <html-to-xml>
+                        <http url="${startUrl}"/>
+                    </html-to-xml>
+                </xpath>
+            </list>
+            
+            <!-- downloads each article and extract data from it -->
+            <body>
+                <xquery>
+                    <xq-param name="doc">
+                        <html-to-xml>
+                            <http url="${sys.fullUrl(startUrl, articleUrl)}?&amp;pagewanted=print"/>
+                        </html-to-xml>
+                    </xq-param>
+                    <xq-expression><![CDATA[
+                        declare variable $doc as node() external;
+                        
+                        let $author := data($doc//div[@class="byline"])
+                        let $title := data($doc//h1)
+                        let $text := data($doc//div[@id="articleBody"])
+                            return
+                                <article>
+                                    <title>{data($title)}</title>
+                                    <author>{data($author)}</author>
+                                    <text>{data($text)}</text>
+                                </article>
+                    ]]></xq-expression>
+                </xquery>
+            </body>
+        </loop>
+        
+        <![CDATA[ </newyourk_times> ]]>
+    </file>
+    
+</config>
