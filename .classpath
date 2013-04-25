@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="webharvest-ide/src/main/java"/>
+	<classpathentry kind="src" path="webharvest-ide/src/main/resources"/>
+	<classpathentry kind="src" path="webharvest-ide/src/test/resources"/>
+	<classpathentry kind="src" path="webharvest-ide/src/test/java"/>
+	<classpathentry kind="src" path="webharvest-core/src/main/resources"/>
+	<classpathentry kind="src" path="webharvest-core/deprecated/test/java"/>
+	<classpathentry kind="src" path="webharvest-core/src/test/resources"/>
+	<classpathentry kind="src" path="webharvest-core/src/main/java"/>
+	<classpathentry kind="src" path="webharvest-core/deprecated/main/java"/>
+	<classpathentry kind="src" path="webharvest-core/src/test/java"/>
+	<classpathentry kind="lib" path="webharvest-core/src/test/resources/MockDBDriver.jar">
+		<attributes>
+			<attribute name="org.eclipse.jst.component.dependency" value="../"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="org.eclipse.jst.component.dependency" value="../"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java-1.7.0-openjdk-1.7.0">
+		<attributes>
+			<attribute name="owner.project.facets" value="java"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
