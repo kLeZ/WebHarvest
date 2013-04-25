@@ -337,7 +337,7 @@
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
-			<version>0.9.8</version>
+			<version>0.9.9-SNAPSHOT</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>xml-apis</artifactId>
@@ -378,6 +378,10 @@
 				<exclusion>
 					<artifactId>xmlParserAPIs</artifactId>
 					<groupId>xerces</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>hibernate</artifactId>
+					<groupId>org.hibernate</groupId>
 				</exclusion>
 			</exclusions>
 		</dependency>
